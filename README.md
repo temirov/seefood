@@ -3,6 +3,16 @@
 This Flask application lets you upload an image and classifies it as “Hot Dog!” or “Not Hot Dog” using a Hugging Face
 vision model.
 
+## Screenshots
+
+### Hot Dog detected
+
+![Hot Dog example](assets/hotdog_example.png)
+
+### Not Hot Dog detected
+
+![Not Hot Dog example](assets/not_hotdog_example.png)
+
 ## Prerequisites
 
 - Python 3.8 or newer
