@@ -1,0 +1,10 @@
+# docker-compose.yml
+services:
+  hotdog-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hotdog-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
