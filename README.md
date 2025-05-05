@@ -47,6 +47,8 @@ You can start the app either via Flask’s CLI or by running the script directly
 ```bash
 export FLASK_APP=app.py
 export FLASK_ENV=development
+export FLASK_RUN_HOST=0.0.0.0
+export FLASK_RUN_PORT=8080
 flask run
 ```
 
@@ -66,13 +68,15 @@ http://127.0.0.1:5000
 
 ```
 hotdog/
-├── app.py                  # Flask application
-├── requirements.txt        # Python dependencies
+├── assets/                   # Example images for README
+├── app.py                    # Flask application
+├── requirements.txt          # Python dependencies
 ├── templates/
-│   ├── index.html          # Upload form
-│   └── result.html         # Classification result
+│   ├── index.html            # Upload form
+│   └── result.html           # Classification result
 └── tests/
-    ├── images/             # Sample test images
+    ├── __init__.py           # Package marker for tests
+    ├── images/               # Sample test images
     └── test_classification.py  # Unittest suite
 ```
 
