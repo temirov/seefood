@@ -1,10 +1,17 @@
-# docker-compose.yml
 services:
   hotdog-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: hotdog-app
     restart: unless-stopped
     ports:
       - "5000:5000"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities:
+                - gpu
