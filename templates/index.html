@@ -1,42 +1,266 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hot Dog / Not Hot Dog</title>
-    <link 
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" 
-      rel="stylesheet"
+    <title>Hot Dog / Not Hot Dog</title>
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+            rel="stylesheet"
     >
-  </head>
-  <body class="bg-light">
-    <div class="container py-5">
-      <div class="row justify-content-center">
-        <div class="col-md-6">
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <h1 class="card-title mb-4 text-center">Hot Dog / Not Hot Dog</h1>
-              {% if error_message %}
-                <div class="alert alert-danger">{{ error_message }}</div>
-              {% endif %}
-              <form method="post" action="/predict" enctype="multipart/form-data">
-                <div class="mb-3">
-                  <input 
-                    class="form-control" 
-                    type="file" 
-                    name="image" 
-                    accept="image/*" 
-                    required
-                  >
+    <style>
+        /* Removed html, body flex centering styles. Body will have default flow. */
+        body {
+            background-color: #f8f9fa; /* Bootstrap's bg-light color */
+            padding-top: 3rem; /* Add some padding at the top of the body */
+            padding-bottom: 3rem; /* Add some padding at the bottom */
+        }
+        /* .container will behave as usual, providing max-width and centering its content */
+
+        #drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        #drop-zone.drag-over {
+            border-color: #007bff;
+            background-color: #e9ecef;
+        }
+        #drop-zone p {
+            margin-bottom: 0;
+            color: #555;
+        }
+        #drop-zone .drop-zone-text-main {
+            font-size: 1.1em;
+        }
+        #drop-zone .drop-zone-text-secondary {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        #browse-link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        #browse-link:hover {
+            text-decoration: underline;
+        }
+        #file-name-display {
+            margin-top: 15px;
+            font-style: italic;
+            color: #333;
+            min-height: 1.2em;
+        }
+        #file-input {
+            display: none;
+        }
+        #drop-zone.drop-zone-error {
+            border-color: #dc3545;
+        }
+        #file-name-display.error-message {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+    </style>
+</head>
+<body>
+<div class="container"> <!-- No extra padding like py-4, body handles padding now -->
+
+    <!-- Image Selection Card Section -->
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6"> <!-- Uploader card column -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h1 class="card-title mb-4 text-center">Hot Dog / Not Hot Dog</h1>
+
+                    {% if error_message %}
+                        <div class="alert alert-danger server-error-alert">{{ error_message }}</div>
+                    {% endif %}
+
+                    <form id="upload-form" method="post" action="/predict" enctype="multipart/form-data">
+                        <div id="drop-zone" class="mb-3">
+                            <input type="file" name="image" id="file-input" accept="image/*">
+                            <p class="drop-zone-text-main">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-cloud-arrow-up-fill" viewBox="0 0 16 16" style="margin-bottom: 4px;">
+                                    <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2z"/>
+                                </svg>
+                                Drag & drop an image here
+                            </p>
+                            <p class="drop-zone-text-secondary">or <a href="#" id="browse-link">click to select a file</a></p>
+                            <div id="file-name-display"></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Upload and Classify
+                        </button>
+                    </form>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">
-                  Upload and Classify
-                </button>
-              </form>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </body>
+    <!-- End Image Selection Card Section -->
+
+    <!-- YouTube Video Embed Section -->
+    <div class="row justify-content-center mt-5"> <!-- Added significant margin-top (mt-5) -->
+        <div class="col-lg-8 col-md-10"> <!-- Video column -->
+            <div class="ratio ratio-16x9 shadow-sm rounded">
+                <iframe
+                        src="https://www.youtube.com/embed/ACmydtFDTGs"
+                        title="Hot Dog or Not Hot Dog - Silicon Valley - HBO"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                ></iframe>
+            </div>
+        </div>
+    </div>
+    <!-- End YouTube Video Embed Section -->
+
+</div> <!-- End .container -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const browseLink = document.getElementById('browse-link');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const uploadForm = document.getElementById('upload-form');
+        const serverErrorAlert = document.querySelector('.server-error-alert');
+
+        function clearErrorState() {
+            dropZone.classList.remove('drop-zone-error', 'shake');
+            fileNameDisplay.textContent = '';
+            fileNameDisplay.classList.remove('error-message');
+            if (serverErrorAlert && serverErrorAlert.textContent.includes("Please choose an image file.")) {
+                // serverErrorAlert.style.display = 'none';
+            }
+        }
+
+        function showErrorState(message) {
+            dropZone.classList.add('drop-zone-error');
+            dropZone.classList.add('shake');
+            fileNameDisplay.textContent = message;
+            fileNameDisplay.classList.add('error-message');
+            setTimeout(() => {
+                dropZone.classList.remove('shake');
+            }, 500);
+        }
+
+        uploadForm.addEventListener('submit', function(event) {
+            if (fileInput.files.length === 0) {
+                event.preventDefault();
+                showErrorState('Please select an image file to upload.');
+            } else {
+                clearErrorState();
+            }
+        });
+
+        {% if error_message and "Please choose an image file." in error_message %}
+            showErrorState("{{ error_message|e }}");
+        {% elif error_message %}
+            // For other server errors, the Bootstrap alert will show.
+        {% endif %}
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            window.addEventListener(eventName, preventDefaults, false);
+        });
+        function preventDefaults(e) {
+            if (!dropZone.contains(e.target)) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }
+
+        let dragCounter = 0;
+        dropZone.addEventListener('dragenter', (e) => {
+            preventDefaultsForDropZone(e);
+            dragCounter++;
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            preventDefaultsForDropZone(e);
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            preventDefaultsForDropZone(e);
+            dragCounter--;
+            if (dragCounter === 0) {
+                dropZone.classList.remove('drag-over');
+            }
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            preventDefaultsForDropZone(e);
+            dragCounter = 0;
+            dropZone.classList.remove('drag-over');
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFiles(files);
+            } else {
+                clearErrorState();
+            }
+        });
+
+        function preventDefaultsForDropZone(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        dropZone.addEventListener('click', (e) => {
+            if (e.target !== browseLink && !browseLink.contains(e.target)) {
+                fileInput.click();
+            }
+        });
+
+        browseLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleFiles(fileInput.files);
+            } else {
+                if (!dropZone.classList.contains('drop-zone-error')) {
+                    fileNameDisplay.textContent = '';
+                    fileNameDisplay.classList.remove('error-message');
+                }
+            }
+        });
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    showErrorState('Error: Selected file is not an image.');
+                    fileInput.value = '';
+                    return;
+                }
+
+                clearErrorState();
+                fileNameDisplay.textContent = `Selected: ${file.name}`;
+            } else {
+                if (!dropZone.classList.contains('drop-zone-error')) {
+                    fileNameDisplay.textContent = '';
+                }
+            }
+        }
+    });
+</script>
+</body>
 </html>
